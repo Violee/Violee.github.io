@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário com Modal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="floating-container">
+        <div class="cards-section">
+            <div class="card">Card 1</div>
+            <div class="card">Card 2</div>
+        </div>
+        <div class="form-section">
+            <form id="info-form">
+                <label for="date">Data:</label>
+                <input type="date" id="date" name="date" required>
+
+                <label for="service">Frente de Serviço:</label>
+                <input type="text" id="service" name="service" required>
+
+                <label for="supervisor">Encarregado Responsável:</label>
+                <input type="email" id="supervisor" name="supervisor" required>
+
+                <label for="employee-search">Lista de Funcionários:</label>
+                <input type="text" id="employee-search" name="employee-search" placeholder="Pesquisar funcionário...">
+
+                <ul id="employee-suggestions" class="suggestions-list"></ul>
+
+                <button type="submit" id="submit-button" disabled>Enviar</button>
+                <button type="button" id="clear-button">Cancelar</button>
+                <button type="button" id="verify-button">Verificar Equipes e Pessoas Selecionadas</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação -->
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmação</h2>
+            <div id="confirmation-details"></div>
+            <button id="confirm-button">Confirmar</button>
+            <button id="cancel-button">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de verificação de seleção -->
+    <div id="verification-modal" class="modal">
+        <div class="modal-content">
+            <h2>Equipes e Pessoas Selecionadas</h2>
+            <div id="verification-details" class="scrollable-content"></div>
+            <button id="close-verification-modal">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+        const employees = ['Funcionário 1', 'Funcionário 2', 'Funcionário 3', 'Funcionário 4', 'Funcionário 5'];
+        const employeeSearch = document.getElementById('employee-search');
+        const suggestionsList = document.getElementById('employee-suggestions');
+        const submitButton = document.getElementById('submit-button');
+        const clearButton = document.getElementById('clear-button');
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const confirmationDetails = document.getElementById('confirmation-details');
+        const confirmButton = document.getElementById('confirm-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const verificationModal = document.getElementById('verification-modal');
+        const verificationDetails = document.getElementById('verification-details');
+        const closeVerificationModal = document.getElementById('close-verification-modal');
+
+        let selectedEmployees = [];
+
+        employeeSearch.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            suggestionsList.innerHTML = ''; // Limpa as sugestões anteriores
+
+            if (query) {
+                const filteredEmployees = employees.filter(employee => employee.toLowerCase().includes(query));
+                filteredEmployees.forEach(employee => {
+                    const suggestionItem = document.createElement('li');
+                    suggestionItem.textContent = employee;
+                    suggestionItem.addEventListener('click', function() {
+                        addEmployee(employee);
+                        employeeSearch.value = ''; // Limpa a barra de pesquisa
+                        suggestionsList.innerHTML = ''; // Limpa as sugestões
+                    });
+                    suggestionsList.appendChild(suggestionItem);
+                });
+            }
+        });
+
+        function addEmployee(name) {
+            if (!selectedEmployees.includes(name)) {
+                selectedEmployees.push(name);
+                checkFormCompletion(); // Verifica se o formulário deve ser habilitado
+            }
+        }
+
+        function checkFormCompletion() {
+            const isFormComplete = Array.from(document.querySelectorAll('#info-form input')).every(input => input.value);
+            submitButton.disabled = !isFormComplete;
+        }
+
+        document.getElementById("info-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const date = document.getElementById("date").value;
+            const service = document.getElementById("service").value;
+            const supervisor = document.getElementById("supervisor").value;
+
+            const confirmationText = `
+                <p><strong>Data:</strong> ${date}</p>
+                <p><strong>Frente de Serviço:</strong> ${service}</p>
+                <p><strong>Encarregado Responsável:</strong> ${supervisor}</p>
+                <p><strong>Funcionários Selecionados:</strong></p>
+                <ul>${selectedEmployees.map(employee => `<li>${employee}</li>`).join('')}</ul>
+            `;
+            confirmationDetails.innerHTML = confirmationText;
+
+            confirmationModal.style.display = 'flex';
+        });
+
+        confirmButton.addEventListener('click', function() {
+            confirmationModal.style.display = 'none';
+            alert("Formulário enviado com sucesso!");
+            window.location.href = 'index.html'; // Redireciona para a tela inicial
+        });
+
+        cancelButton.addEventListener('click', function() {
+            confirmationModal.style.display = 'none';
+        });
+
+        clearButton.addEventListener('click', function() {
+            document.getElementById("info-form").reset();
+            selectedEmployees = [];
+            submitButton.disabled = true;
+        });
+
+        document.getElementById('verify-button').addEventListener('click', function() {
+            const verificationText = `
+                <h3>Funcionários Selecionados:</h3>
+                <ul>${selectedEmployees.map(employee => `<li>${employee}</li>`).join('')}</ul>
+            `;
+            verificationDetails.innerHTML = verificationText;
+
+            verificationModal.style.display = 'flex';
+        });
+
+        closeVerificationModal.addEventListener('click', function() {
+            verificationModal.style.display = 'none';
+        });
+    </script>
+</body>
+<style>
+/* Estilo para o layout principal */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: aliceblue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Container flutuante */
+.floating-container {
+    display: flex;
+    max-width: 1000px;
+    width: 100%;
+    height: 600px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+/* Seção dos cards */
+.cards-section {
+    width: 30%;
+    background-color: #f5f5f5;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+/* Cards */
+.card {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Seção do formulário */
+.form-section {
+    width: 70%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Formatação do formulário */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 10px;
+}
+
+input[type="text"], input[type="email"], input[type="date"], textarea {
+    margin-top: 5px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+ul.suggestions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+ul.suggestions-list li {
+    padding: 10px;
+    cursor: pointer;
+}
+
+ul.suggestions-list li:hover {
+    background-color: #f0f0f0;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para o modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+.scrollable-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .floating-container {
+        width: 100%;
+        height: auto;
+        flex-direction: column;
+        box-shadow: none;
+    }
+
+    .cards-section {
+        display: none;
+    }
+
+    .form-section {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: none;
+    }
+}
+</style>
+</html>
